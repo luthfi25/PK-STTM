@@ -83,4 +83,24 @@ public class CmdArgs
 	@Option(name = "-paras", usage = "Specify path to hyper-parameter file")
 	public String paras = "";
 
+	@Option(name = "-mu", usage = "Specify mean value of source distribution")
+	public double mu = 0.0;
+
+	@Option(name = "-sigma", usage = "Specify standard deviation value of source distribution")
+	public double sigma = 0.0;
+
+	@Option(name = "-ks", usage = "Knowledge source file path")
+	public String ks = "";
+
+	@Option(name = "-A", usage = "Approximation steps for Source-LDA")
+	public int A = 0;
+
+	@Option(name = "-gt", usage = "GT Points pre-calculation file path")
+	public String gt = "";
+
+	@Option(name = "-left", usage = "Left bound for sigma")
+	public double left = 0.0;
+
+	@Option(name = "-right", usage = "Right bound for sigma")
+	public double right = 0.0;
 }

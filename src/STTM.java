@@ -120,6 +120,11 @@ public class STTM
 						cmdArgs.twords, cmdArgs.expModelName, cmdArgs.savestep);
 				lfdmmInf.inference();
 			}
+			else if (cmdArgs.model.equals("PKLFLDA")) {
+				PKLFLDA pklflda = new PKLFLDA(cmdArgs.corpus, cmdArgs.vectors, cmdArgs.ntopics, cmdArgs.alpha,
+						cmdArgs.beta, cmdArgs.lambda, cmdArgs.niters, cmdArgs.niters, cmdArgs.twords,
+						cmdArgs.expModelName, cmdArgs.mu, cmdArgs.sigma, cmdArgs.A, cmdArgs.ks, cmdArgs.gt, cmdArgs.left, cmdArgs.right);
+			}
 			else if (cmdArgs.model.equals("ClusteringEval")) {
 				ClusteringEval.evaluate(cmdArgs.labelFile, cmdArgs.dir,
 					cmdArgs.prob);
