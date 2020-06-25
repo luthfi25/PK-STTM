@@ -2,9 +2,7 @@ package models;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class PKLFLDA {
     public int numTopics;
@@ -39,6 +37,14 @@ public class PKLFLDA {
 
     public double left; //Left bound for sigma
     public double right; //right bound for sigma
+
+    public int totalTopics; //T
+    public int B = 0; //background knowledge topics
+
+    public List<List<Integer>> corpus_t; //taken from initRandom
+    public List<Integer> visibleTopics; //from load
+
+    public double[] topicProbs; //pr
 
     public PKLFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
                    double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
@@ -110,6 +116,70 @@ public class PKLFLDA {
 
         vocabularySize = word2IdVocabulary.size();
         loadDeltas(pathToKS, pathToGT);
+        totalTopics = B;
+
+        initRandom();
+        updateN();
+
+        boolean[] hidden = new boolean[totalTopics];
+        for (int i=0; i<totalTopics; i++) {
+            hidden[i] = false;
+            visibleTopics.add(i);
+        }
+
+        topicProbs = new double[totalTopics];
+    }
+
+    public void updateN(){
+        int[][] n_w = new int[totalTopics][vocabularySize];
+        int[] n_w_dot = new int[totalTopics];
+        int[] n_d_dot = new int[totalTopics];
+        int[][] n_d = new int[totalTopics][numDocuments];
+
+        for (int i=0; i<totalTopics; i++) {
+            n_w_dot[i] = 0;
+            n_w[i] = new int[vocabularySize];
+            n_d_dot[i] = 0;
+
+            for (int j=0; j<vocabularySize; j++) {
+                n_w[i][j] = 0;
+            }
+            n_d[i] = new int[numDocuments];
+
+            for (int j=0; j<numDocuments; j++) {
+                n_d[i][j] = 0;
+            }
+        }
+
+        for (int doc=0; doc<numDocuments; doc++) {
+            HashSet<Integer> topics_in_doc = new HashSet<>();
+
+            for (int token = 0; token < corpus.get(doc).size(); token++) {
+                int t = corpus_t.get(doc).get(token);
+                int w = corpus.get(doc).get(token);
+                topics_in_doc.add(t);
+                n_w[t][w]++;
+                n_d[t][doc]++;
+                n_w_dot[t]++;
+            }
+            for (Integer itr : topics_in_doc) {
+                n_d_dot[itr]++;
+            }
+        }
+    }
+
+    public void initRandom(){
+        Random random = new Random();
+
+        corpus_t = new ArrayList<>();
+        for (int doc=0; doc<numDocuments; doc++) {
+            List<Integer> topics = new ArrayList<>();
+            for (int token=0; token< corpus.get(doc).size(); token++) {
+                int t = random.nextInt(totalTopics);
+                topics.add(t);
+            }
+            corpus_t.set(doc, topics);
+        }
     }
 
     public void loadDeltas(String pathToKnowledgeSource, String pathToGtpoints){
@@ -150,7 +220,7 @@ public class PKLFLDA {
             e.printStackTrace();
         }
 
-        int B = deltas.size();
+        B = deltas.size();
         double[][] deltaPowSums = new double[B][];
 
         for (int i=0; i < B; i++){
@@ -200,31 +270,31 @@ public class PKLFLDA {
             sum += density;
         }
 
-//        for (int a=0; a<A; a++) {
-//            norm[a] = norm[a]/sum;
-//        }
-//
-//        delta_pows = new double**[B];
-//
-//        for (int i=0; i<B; i++) {
-//            delta_pows[i] = new double*[V];
-//            double sum[A];
-//            for (int a = 0; a < A; a++) {
-//                sum[a] = 0.0;
-//            }
-//            for (int j=0; j<V; j++) {
-//                delta_pows[i][j] = new double[A];
-//                for (int a = 0; a < A; a++) {
-//                    double mapped = options.use_gtpoints ? gt_points.map(i, lambdas[a]) : lambdas[a];
-//                    double val = pow(deltas[i][j], mapped);
-//                    delta_pows[i][j][a] = val;
-//                    sum[a] += val;
-//                }
-//            }
-//            for (int a=0; a<A; a++) {
-//                delta_pow_sums[i][a] = sum[a];
-//            }
-//        }
+       for (int a=0; a < approx; a++) {
+           norm[a] = norm[a]/sum;
+       }
+
+       double[][][] delta_pows = new double[B][vocabularySize][approx];
+
+        for (int i=0; i<B; i++) {
+            delta_pows[i] = new double[vocabularySize][approx];
+            double[] subSum = new double[approx];
+            for (int a = 0; a < approx; a++) {
+                subSum[a] = 0.0;
+            }
+            for (int j=0; j<vocabularySize; j++) {
+                delta_pows[i][j] = new double[approx];
+                for (int a = 0; a < approx; a++) {
+                    double mapped = mapGTPoints(i, lambdas[a]);
+                    double val = Math.pow(deltas.get(i).get(j), mapped);
+                    delta_pows[i][j][a] = val;
+                    subSum[a] += val;
+                }
+            }
+            for (int a=0; a<approx; a++) {
+                deltaPowSums[i][a] = subSum[a];
+            }
+        }
     }
 
     public void loadGTPoints(String pathToGtpoints){
@@ -256,6 +326,51 @@ public class PKLFLDA {
         }
     }
 
+    public double mapGTPoints(int id, double x){
+        try{
+            int low = gtPoints.get(id).size()-1;
+            int max = gtPoints.get(id).size()-1;
+            int high = 0;
+
+            while (high <= low) {
+                int mid = (low + high) / 2;
+                if (gtPoints.get(id).get(mid).getX() == x) {
+                    return gtPoints.get(id).get(mid).getY();
+                }
+                if (gtPoints.get(id).get(low).getX() == x) {
+                    return gtPoints.get(id).get(low).getY();
+                }
+                if (gtPoints.get(id).get(high).getX() == x) {
+                    return gtPoints.get(id).get(high).getY();
+                }
+                if (low == high + 1) {
+                    mid = high;
+                }
+                if (gtPoints.get(id).get(mid).getX() > x && x > gtPoints.get(id).get(Math.min(mid+1, max)).getX()) {
+                    double x_s = gtPoints.get(id).get(Math.min(mid+1, max)).getX();
+                    double x_l = gtPoints.get(id).get(mid).getX();
+                    double y_s = gtPoints.get(id).get(Math.min(mid+1, max)).getY();
+                    double y_l = gtPoints.get(id).get(mid).getY();
+                    double x_gap = x_l - x_s;
+                    double y_gap = y_l - y_s;
+                    double frac = (x - x_s) / x_gap;
+                    return y_s + frac * y_gap;
+                }
+                else if (gtPoints.get(id).get(mid).getX() > x) {
+                    high = mid;
+                }
+                else {
+                    low = mid;
+                }
+            }
+            throw new Exception("Error load_deltas: high > low");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
     public double normal(double x, double mu, double sigma){
         double xMinusMuSquared = (x - mu) * (x - mu);
         double twoSigmaSquared = (sigma * sigma) * 2.0;
@@ -264,5 +379,11 @@ public class PKLFLDA {
         double sqrtTwoSigmaSquaredPi = Math.sqrt(twoSigmaSquared * Math.PI);
         double result = (1.0 / sqrtTwoSigmaSquaredPi) * eExponent;
         return result;
+    }
+
+    public void inference(){
+        System.out.println("Running Gibbs sampling inference: ");
+
+        return;
     }
 }

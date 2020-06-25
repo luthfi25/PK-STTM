@@ -124,6 +124,7 @@ public class STTM
 				PKLFLDA pklflda = new PKLFLDA(cmdArgs.corpus, cmdArgs.vectors, cmdArgs.ntopics, cmdArgs.alpha,
 						cmdArgs.beta, cmdArgs.lambda, cmdArgs.niters, cmdArgs.niters, cmdArgs.twords,
 						cmdArgs.expModelName, cmdArgs.mu, cmdArgs.sigma, cmdArgs.A, cmdArgs.ks, cmdArgs.gt, cmdArgs.left, cmdArgs.right);
+				pklflda.inference();
 			}
 			else if (cmdArgs.model.equals("ClusteringEval")) {
 				ClusteringEval.evaluate(cmdArgs.labelFile, cmdArgs.dir,
