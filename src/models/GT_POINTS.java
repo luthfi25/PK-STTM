@@ -25,7 +25,15 @@ public class GT_POINTS {
         this.y = y;
     }
 
-//    public double map(int id, double x) {
+    @Override
+    public String toString() {
+        return "GT_POINTS{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
+
+    //    public double map(int id, double x) {
 //        int low = src_points[id].size()-1;
 //        int max = src_points[id].size()-1;
 //        int high = 0;

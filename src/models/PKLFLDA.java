@@ -99,6 +99,13 @@ public class PKLFLDA {
         right = inRight;
         folderPath = "results/";
 
+        word2IdVocabulary = new HashMap<>();
+        id2WordVocabulary = new HashMap<>();
+        corpus = new ArrayList<>();
+        topicLabels = new ArrayList<>();
+        deltas = new ArrayList<>();
+        gtPoints = new ArrayList<>();
+
         //Assign word2Id and id2word
         BufferedReader br = null;
         try {
@@ -133,11 +140,12 @@ public class PKLFLDA {
 
         vocabularySize = word2IdVocabulary.size();
         loadDeltas(pathToKS, pathToGT);
-        totalTopics = B;
+        totalTopics = B + numTopics;
 
         initRandom();
         updateN();
 
+        visibleTopics = new ArrayList<>();
         hidden = new boolean[totalTopics];
         for (int i = 0; i < totalTopics; i++) {
             hidden[i] = false;
@@ -195,11 +203,12 @@ public class PKLFLDA {
                 int t = random.nextInt(totalTopics);
                 topics.add(t);
             }
-            corpus_t.set(doc, topics);
+            corpus_t.add(topics);
         }
     }
 
     public void loadDeltas(String pathToKnowledgeSource, String pathToGtpoints) {
+        System.out.println("Loading deltas...");
         for (int i = 0; i < numTopics; i++) {
             topicLabels.add(String.valueOf(i));
         }
@@ -260,7 +269,7 @@ public class PKLFLDA {
         }
 
         double left_bound = Math.max(mu - 2 * sigma, left_max);
-        double right_bound = Math.max(mu + 2 * sigma, right_min);
+        double right_bound = Math.min(mu + 2 * sigma, right_min);
 
         double interval = (right_bound - left_bound) / (Double.valueOf(approx - 1));
         if (approx < 2) {
@@ -292,6 +301,7 @@ public class PKLFLDA {
 
         delta_pows = new double[B][vocabularySize][approx];
 
+        System.out.println("mapping gt points...");
         for (int i = 0; i < B; i++) {
             delta_pows[i] = new double[vocabularySize][approx];
             double[] subSum = new double[approx];
@@ -311,9 +321,13 @@ public class PKLFLDA {
                 deltaPowSums[i][a] = subSum[a];
             }
         }
+        System.out.println("finished mapping gt points!");
+
+        System.out.println("Finished loading deltas!");
     }
 
     public void loadGTPoints(String pathToGtpoints) {
+        System.out.println("Loading gt points...");
         gtPoints.clear();
 
         BufferedReader br = null;
@@ -327,7 +341,7 @@ public class PKLFLDA {
                 String[] points = line.trim().split("\\s+");
                 List<GT_POINTS> gtPointsLine = new ArrayList<GT_POINTS>();
 
-                for (int i = 0; i + 1 < points.length; i++) {
+                for (int i = 0; i + 1 < points.length; i = i+2) {
                     double x = Double.parseDouble(points[i]);
                     double y = Double.parseDouble(points[i + 1]);
                     GT_POINTS gtPoint = new GT_POINTS(x, y);
@@ -339,6 +353,8 @@ public class PKLFLDA {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        System.out.println("Finished loading gt points!");
     }
 
     public double mapGTPoints(int id, double x) {
@@ -402,6 +418,7 @@ public class PKLFLDA {
 //        int n_prune = (int) Math.ceil(((double)start_y) / ((double)(numIterations-burn)));
 //        stats.tot_iteration_time = 0;
         for (int iter = 0; iter <= numIterations; iter++) {
+            System.out.println("iteration " + iter + "....");
 //            stats.assign_correct = 0;
 //            stats.assign_total = 0;
 //            auto start = high_resolution_clock::now();
@@ -558,7 +575,7 @@ public class PKLFLDA {
 //                }
 //            }
 //            else {
-                int b = totalTopics;
+                int b = t;
                 for (int w=0; w<vocabularySize; w++) {
                     double sum = 0.0;
                     for (int a=0; a<approx; a++) {
