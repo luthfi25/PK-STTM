@@ -1,7 +1,6 @@
 package models;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class PKLFLDA {
@@ -412,22 +411,8 @@ public class PKLFLDA {
     public void inference() {
         System.out.println("Running Gibbs sampling inference: ");
 
-//        int burn = 100;
-//        int start_y = totalTopics;
-
-//        int n_prune = (int) Math.ceil(((double)start_y) / ((double)(numIterations-burn)));
-//        stats.tot_iteration_time = 0;
         for (int iter = 0; iter <= numIterations; iter++) {
             System.out.println("iteration " + iter + "....");
-//            stats.assign_correct = 0;
-//            stats.assign_total = 0;
-//            auto start = high_resolution_clock::now();
-//            stats.tot_reg = 0;
-//            stats.cnt_reg = 0;
-//            stats.tot_model = 0;
-//            stats.cnt_model = 0;
-//            stats.iteration_time = 0;
-//            cout << currentDateTime() << "...SrcLDA.gibbs - begin iter " << iter << "...topics " << visible_topics.size() << endl;
 
             for (int doc = 0; doc < numDocuments; doc++) {
                 for (int token = 0; token < corpus.get(doc).size(); token++) {
@@ -437,10 +422,6 @@ public class PKLFLDA {
                     corpus_t.set(doc, newDoc);
                 }
             }
-
-//            stats.iteration_time = duration_cast<milliseconds>(high_resolution_clock::now()-start).count();
-//            stats.tot_iteration_time += stats.iteration_time;
-//            Display_stats(iter);
         }
 
         System.out.println("Gibbs sampling done!");
@@ -458,19 +439,9 @@ public class PKLFLDA {
             n_d_dot[topic]--;
         }
 
-//        if (n_w_dot[topic] == 0 && visible_topics.size() > K && !hidden[topic] && options.model != bijective) {
-//            cout << currentDateTime() << "...removing topic " << topic << endl;
-//            Hide_topic(topic);
-//        }
-//        alpha = options.use_alpha ? options.alpha : ((double)50) / ((double)visible_topics.size());
-
         topic = pop_sample(w, doc);
         topic = visibleTopics.get(topic);
-    //    stats.assign_total++;
-    //    int offset = options.model == bijective ? 0 : K;
-    //    if (options.use_key && ground_truth[doc][token] + offset == topic) {
-    //        stats.assign_correct++;
-    //    }
+
         if (n_d[topic][doc] == 0) {
             n_d_dot[topic]++;
         }
@@ -506,14 +477,6 @@ public class PKLFLDA {
     }
 
     public void populate_prob(int i, int t, int word, int doc, int start){
-//        if (t < K) {
-//            pr[i] = (((double) n_w[t][word] + beta) / (((double) n_w_dot[t]) + ((double) V) * beta)) *
-//                    (((double) n_d[t][doc] + alpha) / (((double) (corpus[doc].size() - 1)) + ((double) visible_topics.size()) * alpha));
-//
-//            stats.cnt_reg++;
-//            stats.tot_reg += pr[i];
-//        }
-//        else {
         int b = t;
         double sum = 0.0;
         for (int a=0; a<approx; a++) {
@@ -523,11 +486,9 @@ public class PKLFLDA {
                     (((double) n_d[t][doc] + alpha) / (((double) (corpus.get(doc).size() - 1)) + ((double) visibleTopics.size()) * alpha)) *
                     norm[a]);
         }
-//
+
         topicProbs[i] = sum;
-//        stats.cnt_model++;
-//        stats.tot_model += pr[i];
-//        }
+
         if (i > start) {
             topicProbs[i] += topicProbs[i-1];
         }
@@ -543,10 +504,6 @@ public class PKLFLDA {
     }
 
     public void calculate_theta(){
-//        for (int i=0; i<theta.size(); i++) {
-//            theta[i].clear();
-//        }
-//        theta.clear();
         theta = new ArrayList<>();
         int topic_count = visibleTopics.size();
         for (int doc=0; doc<numDocuments; doc++) {
@@ -560,40 +517,25 @@ public class PKLFLDA {
     }
 
     public void calculate_phi(){
-//        for (int i=0; i<phi.size(); i++) {
-//            phi[i].clear();
-//        }
-//        phi.clear();
-
         phi = new ArrayList<>();
         for (int t=0; t<totalTopics; t++) {
             ArrayList<Double> phi_t = new ArrayList<>();
-//            vector<double> phi_t(V);
-//            if (t < K) {
-//                for (int w=0; w<V; w++) {
-//                    phi_t[w] = (((double)n_w[t][w]) + beta)/(((double)n_w_dot[t]) + (((double)V)*beta));
-//                }
-//            }
-//            else {
-                int b = t;
-                for (int w=0; w<vocabularySize; w++) {
-                    double sum = 0.0;
-                    for (int a=0; a<approx; a++) {
-                        double delta_i_j = delta_pows[b][w][a];
-                        double delta_a_j_sum = deltaPowSums[b][a];
-                        sum += (((double) n_w[t][w] + delta_i_j) / (((double) n_w_dot[t]) + delta_a_j_sum))*norm[a];
-                    }
-                    phi_t.add(sum);
+            int b = t;
+            for (int w=0; w<vocabularySize; w++) {
+                double sum = 0.0;
+                for (int a=0; a<approx; a++) {
+                    double delta_i_j = delta_pows[b][w][a];
+                    double delta_a_j_sum = deltaPowSums[b][a];
+                    sum += (((double) n_w[t][w] + delta_i_j) / (((double) n_w_dot[t]) + delta_a_j_sum))*norm[a];
                 }
-//            }
+                phi_t.add(sum);
+            }
+
             phi.add(phi_t);
         }
     }
 
     public void write_distributions(){
-        int top = totalTopics;
-        int[] idx = new int[totalTopics];
-
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                     + ".theta"));
@@ -601,7 +543,6 @@ public class PKLFLDA {
             for (int doc=0; doc<numDocuments; doc++) {
                 for (int t=0; t<totalTopics; t++) {
                     writer.write(theta.get(doc).get(t) + " ");
-//                    theta_out << " " << Clean(theta[doc][t]);
                 }
                 writer.write("\n");
             }
@@ -620,23 +561,11 @@ public class PKLFLDA {
                 String topic = topicLabels.get(t);
                 writer.write(topic + " ");
 
-//            if (options.display.top) {
-//                vector<double> phi_t(phi[t]);
-//                Sort(phi_t, idx);
-//                for (int w=0; w<Min(options.display.n, V); w++) {
-//                    string word = options.display.labels ? id_word[idx[w]] : to_string(idx[w]);
-//                    phi_out << " " << word << ":" << Clean(phi_t[w]);
-//                }
-//            }
-//            else {
                 for (int w=0; w<vocabularySize; w++) {
                     writer.write(phi.get(t).get(w) + " ");
-//                    phi_out << " " << Clean(phi[t][w]);
                 }
 
                 writer.write("\n");
-//            }
-//            phi_out << endl;
             }
             writer.close();
         } catch (IOException e) {
