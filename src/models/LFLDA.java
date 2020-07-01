@@ -20,11 +20,11 @@ import utility.TopicVectorOptimizer;
  * STTM: A Java package for short text topic models
  * Implementation of the LF-LDA latent feature topic model, using collapsed Gibbs sampling, as
  * described in:
- * 
+ *
  * Dat Quoc Nguyen, Richard Billingsley, Lan Du and Mark Johnson. 2015. Improving Topic Models with
  * Latent Feature Word Representations. Transactions of the Association for Computational
  * Linguistics, vol. 3, pp. 299-313.
- * 
+ *
  * @author Dat Quoc Nguyen
  */
 
@@ -44,14 +44,14 @@ public class LFLDA
 
     public List<List<Integer>> corpus; // Word ID-based corpus
     public List<List<Integer>> topicAssignments; // Topics assignments for words
-                                                 // in the corpus
+    // in the corpus
     public int numDocuments; // Number of documents in the corpus
     public int numWordsInCorpus; // Number of words in the corpus
 
     public HashMap<String, Integer> word2IdVocabulary; // Vocabulary to get ID
-                                                       // given a word
+    // given a word
     public HashMap<Integer, String> id2WordVocabulary; // Vocabulary to get word
-                                                       // given an ID
+    // given an ID
     public int vocabularySize; // The number of word types in the corpus
 
     // numDocuments * numTopics matrix
@@ -98,46 +98,46 @@ public class LFLDA
     public int savestep = 0;
 
     public LFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
-            double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
-            int inNumIterations, int inTopWords)
-        throws Exception
+                 double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
+                 int inNumIterations, int inTopWords)
+            throws Exception
     {
         this(pathToCorpus, pathToWordVectorsFile, inNumTopics, inAlpha, inBeta, inLambda,
                 inNumInitIterations, inNumIterations, inTopWords, "LFLDA");
     }
 
     public LFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
-            double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
-            int inNumIterations, int inTopWords, String inExpName)
-        throws Exception
+                 double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
+                 int inNumIterations, int inTopWords, String inExpName)
+            throws Exception
     {
         this(pathToCorpus, pathToWordVectorsFile, inNumTopics, inAlpha, inBeta, inLambda,
                 inNumInitIterations, inNumIterations, inTopWords, inExpName, "", 0);
     }
 
     public LFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
-            double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
-            int inNumIterations, int inTopWords, String inExpName, String pathToTAfile)
-        throws Exception
+                 double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
+                 int inNumIterations, int inTopWords, String inExpName, String pathToTAfile)
+            throws Exception
     {
         this(pathToCorpus, pathToWordVectorsFile, inNumTopics, inAlpha, inBeta, inLambda,
                 inNumInitIterations, inNumIterations, inTopWords, inExpName, pathToTAfile, 0);
     }
 
     public LFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
-            double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
-            int inNumIterations, int inTopWords, String inExpName, int inSaveStep)
-        throws Exception
+                 double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
+                 int inNumIterations, int inTopWords, String inExpName, int inSaveStep)
+            throws Exception
     {
         this(pathToCorpus, pathToWordVectorsFile, inNumTopics, inAlpha, inBeta, inLambda,
                 inNumInitIterations, inNumIterations, inTopWords, inExpName, "", inSaveStep);
     }
 
     public LFLDA(String pathToCorpus, String pathToWordVectorsFile, int inNumTopics,
-            double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
-            int inNumIterations, int inTopWords, String inExpName, String pathToTAfile,
-            int inSaveStep)
-        throws Exception
+                 double inAlpha, double inBeta, double inLambda, int inNumInitIterations,
+                 int inNumIterations, int inTopWords, String inExpName, String pathToTAfile,
+                 int inSaveStep)
+            throws Exception
     {
         alpha = inAlpha;
         beta = inBeta;
@@ -240,7 +240,7 @@ public class LFLDA
     }
 
     public void readWordVectorsFile(String pathToWordVectorsFile)
-        throws Exception
+            throws Exception
     {
         System.out.println("Reading word vectors from word-vectors file " + pathToWordVectorsFile
                 + "...");
@@ -275,13 +275,13 @@ public class LFLDA
             if (MatrixOps.absNorm(wordVectors[i]) == 0.0) {
                 System.out.println("The word \"" + id2WordVocabulary.get(i)
                         + "\" doesn't have a corresponding vector!!!");
-                throw new Exception();
+//                throw new Exception();
             }
         }
     }
 
     public void initialize()
-        throws IOException
+            throws IOException
     {
         System.out.println("Randomly initialzing topic assignments ...");
         topicAssignments = new ArrayList<List<Integer>>();
@@ -361,7 +361,7 @@ public class LFLDA
     }
 
     public void inference()
-        throws IOException
+            throws IOException
     {
         System.out.println("Running Gibbs sampling inference: ");
 
@@ -457,6 +457,9 @@ public class LFLDA
 
                 docTopicCount[dIndex][topic] -= 1;
                 if (subtopic == topic) {
+                    if(topicWordCountLF[topic][word] == 0){
+                        System.out.println("ZERO! "+topic+ " "+word);
+                    }
                     topicWordCountLF[topic][word] -= 1;
                     sumTopicWordCountLF[topic] -= 1;
                 }
@@ -545,7 +548,7 @@ public class LFLDA
     }
 
     public void writeParameters()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName + ".paras"));
         writer.write("-model" + "\t" + "LFLDA");
@@ -568,7 +571,7 @@ public class LFLDA
     }
 
     public void writeDictionary()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                 + ".vocabulary"));
@@ -579,7 +582,7 @@ public class LFLDA
     }
 
     public void writeIDbasedCorpus()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                 + ".IDcorpus"));
@@ -594,7 +597,7 @@ public class LFLDA
     }
 
     public void writeTopicAssignments()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                 + ".topicAssignments"));
@@ -609,7 +612,7 @@ public class LFLDA
     }
 
     public void writeTopicVectors()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                 + ".topicVectors"));
@@ -622,7 +625,7 @@ public class LFLDA
     }
 
     public void writeTopTopicalWords()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName
                 + ".topWords"));
@@ -658,7 +661,7 @@ public class LFLDA
     }
 
     public void writeTopicWordPros()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName + ".phi"));
         for (int t = 0; t < numTopics; t++) {
@@ -673,7 +676,7 @@ public class LFLDA
     }
 
     public void writeDocTopicPros()
-        throws IOException
+            throws IOException
     {
         BufferedWriter writer = new BufferedWriter(new FileWriter(folderPath + expName + ".theta"));
 
@@ -688,7 +691,7 @@ public class LFLDA
     }
 
     public void write()
-        throws IOException
+            throws IOException
     {
         writeTopTopicalWords();
         writeDocTopicPros();
@@ -697,7 +700,7 @@ public class LFLDA
     }
 
     public static void main(String args[])
-        throws Exception
+            throws Exception
     {
         LFLDA lflda = new LFLDA("test/corpus.txt", "test/wordVectors.txt", 4, 0.1, 0.01, 0.6, 2000,
                 200, 20, "testLFLDA");
