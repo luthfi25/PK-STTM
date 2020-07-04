@@ -1,11 +1,11 @@
 package models;
 
-import cc.mallet.optimize.InvalidOptimizableException;
-import cc.mallet.optimize.Optimizer;
-import cc.mallet.types.MatrixOps;
 import utility.FuncUtils;
 import utility.LBFGS;
 import utility.Parallel;
+import cc.mallet.optimize.InvalidOptimizableException;
+import cc.mallet.optimize.Optimizer;
+import cc.mallet.types.MatrixOps;
 import utility.TopicVectorOptimizer;
 
 import java.io.*;
@@ -318,15 +318,16 @@ public class PKLFLDA {
         for (int doc = 0; doc < numDocuments; doc++) {
             List<Integer> topics = new ArrayList<>();
             for (int token = 0; token < corpus.get(doc).size(); token++) {
+                int wordId = corpus.get(doc).get(token);
                 int t = FuncUtils.nextDiscrete(topicProbs);
                 int subt = t % numTopics;
 
                 if (t == subt) { // Generated from the latent feature component
-                    topicWordCountLF[subt][token] += 1;
+                    topicWordCountLF[subt][wordId] += 1;
                     sumTopicWordCountLF[subt] += 1;
                 }
                 else {// Generated from the Dirichlet multinomial component (source LDA)
-                    topicWordCountLDA[subt][token] += 1;
+                    topicWordCountLDA[subt][wordId] += 1;
                     sumTopicWordCountLDA[subt] += 1;
                 }
 
@@ -853,20 +854,26 @@ public class PKLFLDA {
 
     public void calculate_phi(){
         phi = new ArrayList<>();
-        for (int t=0; t<numTopics; t++) {
+        for (int t=0; t<totalTopics; t++) {
             ArrayList<Double> phi_t = new ArrayList<>();
-
             //add filter lflda
-
-            int b = t - numTopics;
-            for (int w=0; w<vocabularySize; w++) {
-                double sum = 0.0;
-                for (int a=0; a<approx; a++) {
-                    double delta_i_j = delta_pows[b][w][a];
-                    double delta_a_j_sum = deltaPowSums[b][a];
-                    sum += (((double) n_w[t][w] + delta_i_j) / (((double) n_w_dot[t]) + delta_a_j_sum))*norm[a];
+            if(t < numTopics) {
+                for (int w = 0; w < vocabularySize; w++) {
+                    double pro = lambda * expDotProductValues[t][w] / sumExpValues[t] + (1 - lambda)
+                            * (topicWordCountLDA[t][w] + beta) / (sumTopicWordCountLDA[t] + betaSum);
+                    phi_t.add(pro);
                 }
-                phi_t.add(sum);
+            } else {
+                int b = t - numTopics;
+                for (int w=0; w<vocabularySize; w++) {
+                    double sum = 0.0;
+                    for (int a=0; a<approx; a++) {
+                        double delta_i_j = delta_pows[b][w][a];
+                        double delta_a_j_sum = deltaPowSums[b][a];
+                        sum += (((double) n_w[t][w] + delta_i_j) / (((double) n_w_dot[t]) + delta_a_j_sum))*norm[a];
+                    }
+                    phi_t.add(sum);
+                }
             }
 
             phi.add(phi_t);
