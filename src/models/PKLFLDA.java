@@ -226,10 +226,10 @@ public class PKLFLDA {
 
                 List<Double> srcWords = new ArrayList<Double>();
                 for (int i = 0; i < vocabularySize; i++) {
-                    srcWords.add(Math.ulp(i * 1.0));
+                    srcWords.add(Math.ulp(1.0));
                 }
 
-                for (int i = 1; i + 1 < words.length; i++) {
+                for (int i = 1; i + 1 < words.length; i += 2) {
                     if (word2IdVocabulary.containsKey(words[i])) {
                         int wordID = word2IdVocabulary.get(words[i]);
                         double newCount = srcWords.get(wordID);
@@ -509,7 +509,8 @@ public class PKLFLDA {
         for (int doc=0; doc<numDocuments; doc++) {
             ArrayList<Double> theta_d = new ArrayList<>();
             for (int t=0; t<totalTopics; t++) {
-                double t_theta_d = (((double)n_d[t][doc]) + alpha) / (((double)corpus.get(doc).size()) + (((double)topic_count)*alpha));
+                double t_theta_d_old = (((double)n_d[t][doc]) + alpha) / (((double)corpus.get(doc).size()) + (((double)topic_count)*alpha));
+                double t_theta_d = (double)Math.round(t_theta_d_old * 1000000d) / 1000000d; // rounding float
                 theta_d.add(t_theta_d);
             }
             theta.add(theta_d);
