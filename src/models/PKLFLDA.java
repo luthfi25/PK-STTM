@@ -881,7 +881,7 @@ public class PKLFLDA {
                     + ".theta"));
 
             for (int doc=0; doc<numDocuments; doc++) {
-                for (int t=0; t<totalTopics; t++) {
+                for (int t=0; t<numTopics; t++) {
                     writer.write(theta.get(doc).get(t) + " ");
                 }
                 writer.write("\n");
@@ -917,7 +917,7 @@ public class PKLFLDA {
                     + ".topWords"));
 
             for (int tIndex = 0; tIndex < numTopics; tIndex++) {
-                writer.write("Topic" + topicLabels.get(tIndex + numTopics) + ":");
+                writer.write(topicLabels.get(tIndex + numTopics) + " ");
 
                 Map<Integer, Double> topicWordProbs = new TreeMap<Integer, Double>();
                 for (int wIndex = 0; wIndex < vocabularySize; wIndex++) {
