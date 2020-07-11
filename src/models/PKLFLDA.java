@@ -917,7 +917,7 @@ public class PKLFLDA {
                     + ".topWords"));
 
             for (int tIndex = 0; tIndex < numTopics; tIndex++) {
-                writer.write(topicLabels.get(tIndex + numTopics) + " ");
+//                writer.write(topicLabels.get(tIndex + numTopics) + " ");
 
                 Map<Integer, Double> topicWordProbs = new TreeMap<Integer, Double>();
                 for (int wIndex = 0; wIndex < vocabularySize; wIndex++) {
