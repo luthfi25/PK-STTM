@@ -1,4 +1,7 @@
-# STTM: A Library of Short Text Topic Modeling
+# PK-STTM
+An attempt to improve Short Text Topic Model (STTM) algorithm by providing Prior Knowledge (PK) with purpose to improve topic classification. Please see the original README below.
+
+-----
 This is a Java （Version=1.8） based open-source library for short text topic modeling algorithms. The library is designed to facilitate the development of short text topic modeling algorithms and make comparisons between the new models and existing ones available. STTM is open-sourced at [Here](https://github.com/qiang2100/STTM).
 
 STTM is maintained by [Jipeng Qiang](https://github.com/qiang2100/) (Yangzhou, China).
